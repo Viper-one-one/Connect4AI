@@ -31,7 +31,7 @@ surface = pygame.display.set_mode((HEIGHT,WIDTH))
 
 #menu functions
 def start_game():
-    pass
+    print("hello world")
 
 def ai_player_type_menu():
     mainmenu._open(ai)
