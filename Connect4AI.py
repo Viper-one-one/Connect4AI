@@ -1,4 +1,7 @@
 
+from faulthandler import is_enabled
+from tkinter import Widget
+from tkinter.ttk import Progressbar
 import pygame
 import random
 import numpy as np
@@ -46,6 +49,29 @@ mainmenu.add.button('Play', start_game)
 mainmenu.add.button('AI Settings', ai_player_type_menu)
 
 ai = pygame_menu.Menu('Select a style of AI player', HEIGHT, WIDTH, theme=themes.THEME_DARK)
-ai.add.selector('Styles: ', [('Random', 1), ('Blocking', 2), ('State Space Search', 3)], onchange=set_ai)
+ai.add.selector('Styles: ', [('Random', 1), ('Blocking', 2), ('State Space Search', 3)], default=0, onchange=set_ai)
 
-mainmenu.mainloop(surface)
+loading = pygame_menu.Menu('Loading...', HEIGHT, WIDTH, theme=themes.THEME_SOLARIZED)
+loading.add.progress_bar('Progress', progressbar_id='1', default=0, width=100)
+
+arrow = pygame_menu.widgets.LeftArrowSelection(arrow_size=(10,15))
+
+update_loading = pygame.USEREVENT+0
+
+while True:
+    events = pygame.event.get()
+    for event in events:
+        if event.type == update_loading:
+            progress = loading.get_widget('1')
+            progress.set_value(progress.get_value() + 1)
+            if progress.get_value() == 100:
+                pygame.time.set_timer(update_loading,0)
+        if event.type == pygame.QUIT:
+            exit()
+    if mainmenu.is_enabled():
+        mainmenu.update(events)
+        mainmenu.draw(surface)
+        if(mainmenu.get_current().get_selected_widget()):
+            arrow.draw(surface, mainmenu.get_current().get_selected_widget())
+
+    pygame.display.update()
