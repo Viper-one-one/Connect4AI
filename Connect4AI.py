@@ -7,6 +7,7 @@ from turtle import position
 import pygame
 import random
 import numpy as np
+from random import randrange
 import sys
 import math
 import pygame_menu
@@ -26,6 +27,9 @@ AI = 1
 EMPTY = 0
 PLAYER_PIECE = 1
 AI_PIECE = 2
+RANDOM_AI = 1
+BLOCKING_AI = 2
+STATE_SPACE_SEARCH = 3
 
 #game functions and ai control
 def create_board():
@@ -33,7 +37,7 @@ def create_board():
     return board
 
 def drop_piece(board, row, col, piece):
-    board[row][col] = piece
+    board[row][col] = piece                 #out of bounds here
 
 def is_valid(board, col):
     return board[ROW_COUNT-1][col] == 0
@@ -97,7 +101,8 @@ def blocking_player():
 
 #pygame creation
 pygame.init()
-ai_type = 0
+global ai_type
+ai_type = RANDOM_AI
 surface = pygame.display.set_mode((HEIGHT,WIDTH))
 board = create_board()
 turn = 0
@@ -112,6 +117,7 @@ my_font = pygame.font.SysFont("monospace", 75)
 #menu functions
 def start_game():
     print_board(board)
+    
     play()
 
 def ai_player_type_menu():
@@ -124,7 +130,9 @@ def set_ai(type, num):
 
 def play():
     game_over = False
+    game_turns = 0
     turn = 0
+    board = create_board()
     screen = pygame.display.set_mode(size)
     draw_board(board)
     pygame.display.update()
@@ -143,31 +151,34 @@ def play():
                 pygame.draw.rect(screen, BLACK, (0,0, WIDTH, SQUARESIZE))
                 if turn == PLAYER:
                     positionx = event.pos[0]
-                    col = int(math.floor(positionx/SQUARESIZE))
+                    col = int(math.floor(positionx / SQUARESIZE))
+                    pygame.display.update()
 
                     if is_valid(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, row, col, PLAYER_PIECE)
 
-                    if check_win(board, PLAYER_PIECE):
+                    if game_turns > 3 and check_win(board, PLAYER_PIECE):
                         label = my_font.render("Player 1 wins!!", 1, RED)
                         screen.blit(label, (40,10))
                         game_over = True
+                    game_turns += 1
                     turn += 1
                     turn = turn % 2
                     print_board(board)
                     draw_board(board)
         if turn == AI and not game_over:
-            if ai_type == 1:
-                positionx = random.choice(range(0,ROW_COUNT))
-                col = int(math.floor(positionx/SQUARESIZE))
+            if ai_type == RANDOM_AI:
+                
+                col = randrange(0, 7)
                 if is_valid(board, col):
                     row = get_next_open_row(board, col)
-                    drop_piece(board, col, row, AI_PIECE)
-                    if check_win(board, AI_PIECE):
-                        label = my_font("Random AI wins!", 1, RED)
+                    drop_piece(board, row, col, AI_PIECE)
+                    if game_turns > 3 and check_win(board, AI_PIECE):
+                        label = my_font.render("Random AI wins!", 1, YELLOW)
                         screen.blit(label, (40,10))
                         game_over = True
+                    game_turns += 1
                     turn += 1
                     turn = turn % 2
                     print_board(board)
@@ -182,7 +193,7 @@ mainmenu.add.button('Play', start_game)
 mainmenu.add.button('AI Settings', ai_player_type_menu)
 
 ai = pygame_menu.Menu('Select a style of AI player', HEIGHT, WIDTH, theme=themes.THEME_DARK)
-ai.add.selector('Styles: ', [('Random', 1), ('Blocking', 2), ('State Space Search', 3)], default=0, onchange=set_ai)
+ai.add.selector('Styles: ', [('Random', 1), ('Blocking', 2), ('State Space Search', 3)], default=1, onchange=set_ai)
 
 loading = pygame_menu.Menu('Loading...', HEIGHT, WIDTH, theme=themes.THEME_SOLARIZED)
 loading.add.progress_bar('Progress', progressbar_id='1', default=0, width=100)
