@@ -1,3 +1,9 @@
+# Group Name
+# Member 1
+# Member 2
+# Manpreet Dhindsa
+# Member 3
+
 
 from ast import Global
 from faulthandler import is_enabled
@@ -12,6 +18,8 @@ import sys
 import math
 import pygame_menu
 from pygame_menu import themes
+
+# 1 is player (red), 2 is ai (yellow)
 
 #definitions
 HEIGHT = 700
@@ -46,6 +54,7 @@ def get_next_open_row(board, col):
     for r in range(ROW_COUNT):
         if board[r][col] == 0:
             return r
+    return None
 
 def print_board(board):
     print(np.flip(board, 0))
@@ -124,7 +133,76 @@ def ai_player_type_menu():
     mainmenu._open(ai)
 
 def set_ai(type, num):
+    global ai_type
     ai_type = num
+    print("ai_type = " + str(ai_type))
+
+# 7 cols and 6 rows
+def colInRange(colNum):
+    return True if colNum >= 0 and colNum <= 6 else False
+
+def isInRange(board, row, col):
+    return True if row >= 0 and row <= 5 and col >= 0 and col <= 6 else False
+
+def isValidBlockingMove(board, row, col):
+    if isInRange(board, row, col) and board[row][col] == 0:
+        if row > 0:
+            for j in range(row - 1 , -1, -1):
+                if board[j][col] == 0:
+                    return False
+        return True
+    return False
+
+"""
+Checks for 3 in a row for Player 1, if found returns the col# to block else null
+"""
+def checkThreeInARow(board, piece):
+    # For horizontal or diagonal, there can be 2 possible blocks (check if they are valid and in range) - return one at random
+    # append possible blocks to possibleBlocks[] and at the end, return one that is in range/works
+    possibleBlocks = []
+
+    # Check horizontal locations for win
+    for c in range(COLUMN_COUNT - 2):
+        for r in range(ROW_COUNT):
+            if board[r][c] == piece and board[r][c + 1] == piece and board[r][c + 2] == piece:
+                if (colInRange(c-1)):
+                    possibleBlocks.append((r,c-1))
+                if (colInRange(c+3)):
+                    possibleBlocks.append((r,c+3))
+    
+    # Check vertical locations for win
+    for c in range(COLUMN_COUNT):
+        for r in range(ROW_COUNT - 2):
+            if board[r][c] == piece and board[r + 1][c] == piece and board[r + 2][c] == piece:
+                possibleBlocks.append((r+3,c))
+
+    # Check positively sloped diaganols
+    for c in range(COLUMN_COUNT - 2):
+        for r in range(ROW_COUNT - 2):
+            if board[r][c] == piece and board[r + 1][c + 1] == piece and board[r + 2][c + 2] == piece:
+                if (colInRange(c+3)):
+                    possibleBlocks.append((r+3,c+3))
+
+    # Check negatively sloped diaganols
+    for c in range(COLUMN_COUNT - 2):
+        for r in range(2, ROW_COUNT):
+            if board[r][c] == piece and board[r - 1][c + 1] == piece and board[r - 2][c + 2] == piece:
+                if (isInRange(board, r-3, c+3)):
+                    possibleBlocks.append((r-3,c+3))
+
+    print("possible blocks")
+    print(possibleBlocks)
+
+    if (len(possibleBlocks) > 0):
+        for possibleBlock in possibleBlocks:
+            #run some verification on it, actually try putting it into the game board (copy)
+            print("verifying - " + str(possibleBlock))
+            print("isValidBlockingMove - " + str(isValidBlockingMove(board, possibleBlock[0], possibleBlock[1])))
+            if (isValidBlockingMove(board, possibleBlock[0], possibleBlock[1])):
+                return possibleBlock[1]
+        return possibleBlocks[0][1] # return the col of the first item
+    return None
+    
 
 
 
@@ -136,6 +214,8 @@ def play():
     screen = pygame.display.set_mode(size)
     draw_board(board)
     pygame.display.update()
+    print("In play method - ai_type = " + str(ai_type))
+    NotValidCols = set()
     while not game_over:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -183,6 +263,35 @@ def play():
                     turn = turn % 2
                     print_board(board)
                     draw_board(board)
+            elif ai_type == BLOCKING_AI:
+                blockCol = checkThreeInARow(board, PLAYER_PIECE)
+                print("Return from checkThreeInARow")
+                print(blockCol)
+                if (blockCol and is_valid(board, blockCol)):
+                    row = get_next_open_row(board, blockCol)
+                    drop_piece(board, row, blockCol, AI_PIECE)
+                else: #random ai move
+                    if (blockCol):
+                        NotValidCols.add(blockCol)
+                    while (True):
+                        col = randrange(0, 7)
+                        if (col not in NotValidCols):
+                            break
+                    if is_valid(board, col):
+                        row = get_next_open_row(board, col)
+                        drop_piece(board, row, col, AI_PIECE)
+                    else:
+                        NotValidCols.add(col)
+                if game_turns > 3 and check_win(board, AI_PIECE):
+                    label = my_font.render("Blocking AI wins!", 1, YELLOW)
+                    screen.blit(label, (40,10))
+                    game_over = True
+                game_turns += 1
+                turn += 1
+                turn = turn % 2
+                print_board(board)
+                draw_board(board)
+
         if game_over:
             pygame.time.wait(5000)
 
