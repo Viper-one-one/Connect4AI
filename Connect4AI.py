@@ -165,41 +165,40 @@ def checkThreeInARow(board, piece):
     for c in range(COLUMN_COUNT - 2):
         for r in range(ROW_COUNT):
             if board[r][c] == piece and board[r][c + 1] == piece and board[r][c + 2] == piece:
-                if (colInRange(c-1)):
+                if (isInRange(board,r,c-1) and isValidBlockingMove(board,r,c-1)):
                     possibleBlocks.append((r,c-1))
-                if (colInRange(c+3)):
+                if (isInRange(board,r,c+3) and isValidBlockingMove(board,r,c+3)):
                     possibleBlocks.append((r,c+3))
     
     # Check vertical locations for win
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT - 2):
             if board[r][c] == piece and board[r + 1][c] == piece and board[r + 2][c] == piece:
-                possibleBlocks.append((r+3,c))
+                if (isInRange(board,r+3,c) and isValidBlockingMove(board,r+3,c)):
+                    possibleBlocks.append((r+3,c))
 
     # Check positively sloped diaganols
     for c in range(COLUMN_COUNT - 2):
         for r in range(ROW_COUNT - 2):
             if board[r][c] == piece and board[r + 1][c + 1] == piece and board[r + 2][c + 2] == piece:
-                if (colInRange(c+3)):
+                if (isInRange(board,r+3,c+3) and isValidBlockingMove(board,r+3,c+3)):
                     possibleBlocks.append((r+3,c+3))
+                if (isInRange(board,r-1,c-1) and isValidBlockingMove(board,r-1,c-1)):
+                    possibleBlocks.append((r-1,c-1))
 
     # Check negatively sloped diaganols
     for c in range(COLUMN_COUNT - 2):
         for r in range(2, ROW_COUNT):
             if board[r][c] == piece and board[r - 1][c + 1] == piece and board[r - 2][c + 2] == piece:
-                if (isInRange(board, r-3, c+3)):
+                if (isInRange(board,r-3,c+3) and isValidBlockingMove(board,r-3,c+3)):
                     possibleBlocks.append((r-3,c+3))
+                if (isInRange(board,r+1,c-1) and isValidBlockingMove(board,r+1,c-1)):
+                    possibleBlocks.append((r+1,c-1))
 
     print("possible blocks")
     print(possibleBlocks)
 
     if (len(possibleBlocks) > 0):
-        for possibleBlock in possibleBlocks:
-            #run some verification on it, actually try putting it into the game board (copy)
-            print("verifying - " + str(possibleBlock))
-            print("isValidBlockingMove - " + str(isValidBlockingMove(board, possibleBlock[0], possibleBlock[1])))
-            if (isValidBlockingMove(board, possibleBlock[0], possibleBlock[1])):
-                return possibleBlock[1]
         return possibleBlocks[0][1] # return the col of the first item
     return None
     
@@ -267,7 +266,7 @@ def play():
                 blockCol = checkThreeInARow(board, PLAYER_PIECE)
                 print("Return from checkThreeInARow")
                 print(blockCol)
-                if (blockCol and is_valid(board, blockCol)):
+                if (blockCol != None and is_valid(board, blockCol)):
                     row = get_next_open_row(board, blockCol)
                     drop_piece(board, row, blockCol, AI_PIECE)
                 else: #random ai move
@@ -275,7 +274,7 @@ def play():
                         NotValidCols.add(blockCol)
                     while (True):
                         col = randrange(0, 7)
-                        if (col not in NotValidCols):
+                        if (col not in NotValidCols and is_valid(board, col)):
                             break
                     if is_valid(board, col):
                         row = get_next_open_row(board, col)
@@ -291,6 +290,14 @@ def play():
                 turn = turn % 2
                 print_board(board)
                 draw_board(board)
+            if (game_turns == 42 and game_over == False):
+                print("This is a draw!")
+                label = my_font.render("Draw!!!", 1, BLUE)
+                screen.blit(label, (40,10))
+                game_over = True
+                print_board(board)
+                draw_board(board)
+                
 
         if game_over:
             pygame.time.wait(5000)
