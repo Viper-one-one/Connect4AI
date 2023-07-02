@@ -257,6 +257,7 @@ def play():
                     pygame.draw.circle(screen, RED, (positionx, int(SQUARESIZE/2)), RADIUS)
             pygame.display.update()
 
+            validPlayerMove = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pygame.draw.rect(screen, BLACK, (0,0, WIDTH, SQUARESIZE))
                 if turn == PLAYER:
@@ -267,16 +268,18 @@ def play():
                     if is_valid(board, col):
                         row = get_next_open_row(board, col)
                         drop_piece(board, row, col, PLAYER_PIECE)
+                        validPlayerMove = True
 
-                    if game_turns > 3 and check_win(board, PLAYER_PIECE):
-                        label = my_font.render("Player 1 wins!!", 1, RED)
-                        screen.blit(label, (40,10))
-                        game_over = True
-                    game_turns += 1
-                    turn += 1
-                    turn = turn % 2
-                    print_board(board)
-                    draw_board(board)
+                    if validPlayerMove == True:
+                        if game_turns > 3 and check_win(board, PLAYER_PIECE):
+                            label = my_font.render("Player 1 wins!!", 1, RED)
+                            screen.blit(label, (40,10))
+                            game_over = True
+                        game_turns += 1
+                        turn += 1
+                        turn = turn % 2
+                        print_board(board)
+                        draw_board(board)
         if turn == AI and not game_over:
             if ai_type == RANDOM_AI:
                 
