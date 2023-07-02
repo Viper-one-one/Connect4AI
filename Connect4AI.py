@@ -195,6 +195,37 @@ def checkThreeInARow(board, piece):
                 if (isInRange(board,r+1,c-1) and isValidBlockingMove(board,r+1,c-1)):
                     possibleBlocks.append((r+1,c-1))
 
+    # Find locations where there is a gapped block X0XX or XX0X, previous implementation handles XXXO and OXXX (for horizontal + diagonals)
+    # Check horizontal locations for gapped block
+    for c in range(COLUMN_COUNT - 3):
+        for r in range(ROW_COUNT):
+            if board[r][c] == piece and board[r][c + 1] == 0 and board[r][c + 2] == piece and board[r][c + 3] == piece: #XOXX
+                if (isInRange(board,r,c+1) and isValidBlockingMove(board,r,c+1)):
+                    possibleBlocks.append((r,c+1))
+            if board[r][c] == piece and board[r][c + 1] == piece and board[r][c + 2] == 0 and board[r][c + 3] == piece: #XXOX
+                if (isInRange(board,r,c+2) and isValidBlockingMove(board,r,c+2)):
+                    possibleBlocks.append((r,c+2))
+
+    # Check positively sloped diaganols for gapped block
+    for c in range(COLUMN_COUNT - 3):
+        for r in range(ROW_COUNT - 3):
+            if board[r][c] == piece and board[r + 1][c + 1] == 0 and board[r + 2][c + 2] == piece and board[r + 3][c + 3] == piece: #XOXX
+                if (isInRange(board,r+1,c+1) and isValidBlockingMove(board,r+1,c+1)):
+                    possibleBlocks.append((r+1,c+1))
+            if board[r][c] == piece and board[r + 1][c + 1] == piece and board[r + 2][c + 2] == 0 and board[r + 3][c + 3] == piece: #XXOX
+                if (isInRange(board,r+2,c+2) and isValidBlockingMove(board,r+2,c+2)):
+                    possibleBlocks.append((r+2,c+2))
+
+    # Check negatively sloped diaganols for gapped block
+    for c in range(COLUMN_COUNT - 3):
+        for r in range(3, ROW_COUNT):
+            if board[r][c] == piece and board[r - 1][c + 1] == 0 and board[r - 2][c + 2] == piece and board[r - 3][c + 3] == piece: #XOXX
+                if (isInRange(board,r-1,c+1) and isValidBlockingMove(board,r-1,c+1)):
+                    possibleBlocks.append((r-1,c+1))
+            if board[r][c] == piece and board[r - 1][c + 1] == piece and board[r - 2][c + 2] == 0 and board[r - 3][c + 3] == piece: #XXOX
+                if (isInRange(board,r-2,c+2) and isValidBlockingMove(board,r-2,c+2)):
+                    possibleBlocks.append((r-2,c+2))
+
     print("possible blocks")
     print(possibleBlocks)
 
