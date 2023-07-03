@@ -1,8 +1,10 @@
 # Group Name
 # Member 1
+# Taylor Nastally
 # Member 2
 # Manpreet Dhindsa
 # Member 3
+# Member 4
 
 
 from ast import Global
@@ -133,7 +135,7 @@ def ai_player_type_menu():
     mainmenu._open(ai)
 
 def set_ai(type, num):
-    global ai_type
+    ai_type
     ai_type = num
     print("ai_type = " + str(ai_type))
 
@@ -282,8 +284,9 @@ def play():
                         draw_board(board)
         if turn == AI and not game_over:
             if ai_type == RANDOM_AI:
-                
                 col = randrange(0, 7)
+                while not is_valid(board, col):
+                    col = randrange(0, 7)
                 if is_valid(board, col):
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, AI_PIECE)
