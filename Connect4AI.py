@@ -135,7 +135,7 @@ def ai_player_type_menu():
     mainmenu._open(ai)
 
 def set_ai(type, num):
-    ai_type
+    global ai_type
     ai_type = num
     print("ai_type = " + str(ai_type))
 
