@@ -106,16 +106,6 @@ def draw_board(board):
                     int(c * SQUARESIZE + SQUARESIZE / 2), height - int(r * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
     pygame.display.update()
 
-#Player types
-def random_player():
-    return 0
-
-def blocking_player():
-    return 0
-
-def state_space_player():
-    return 0
-
 #pygame creation
 pygame.init()
 global ai_type
