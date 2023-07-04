@@ -20,6 +20,7 @@ import sys
 import math
 import pygame_menu
 from pygame_menu import themes
+from copy import copy, deepcopy
 
 # 1 is player (red), 2 is ai (yellow)
 
@@ -39,8 +40,10 @@ PLAYER_PIECE = 1
 AI_PIECE = 2
 RANDOM_AI = 1
 BLOCKING_AI = 2
-STATE_SPACE_SEARCH = 3
+ALPHA_BETA = 3
+STATE_SPACE_SEARCH = 4
 WINDOW_LENGTH = 4
+
 #game functions and ai control
 def create_board():
     board = np.zeros((ROW_COUNT, COLUMN_COUNT))
@@ -367,6 +370,43 @@ def pick_best_move(board, piece):
 
 	return best_col
 
+def state_search(board, depth, score, maximizingPlayer):
+	valid_locations = get_valid_locations(board)
+	is_terminal = is_terminal_node(board)
+	if depth == 0 or is_terminal:
+		if is_terminal:
+			if check_win(board, AI_PIECE):
+				return (None, 100000000000000)
+			elif check_win(board, PLAYER_PIECE):
+				return (None, -10000000000000)
+			else:
+				return (None, 0)
+		else:
+			return (None, score_position(board, AI_PIECE))
+	if maximizingPlayer:
+		value = -math.inf
+		column = random.choice(valid_locations)
+		for col in valid_locations:
+			row = get_next_open_row(board, col)
+			b_copy = board.copy()
+			drop_piece(b_copy, row, col, AI_PIECE)
+			new_score = state_search(b_copy, depth-1, score, False)[1]
+			if new_score > value:
+				value = new_score
+				column = col
+		return column, value
+	else:
+		value = math.inf
+		column = random.choice(valid_locations)
+		for col in valid_locations:
+			row = get_next_open_row(board, col)
+			b_copy = board.copy()
+			drop_piece(b_copy, row, col, PLAYER_PIECE)
+			new_score = state_search(b_copy, depth-1, score, True)[1]
+			if new_score < value:
+				value = new_score
+				column = col
+		return column, value
 
 
 
@@ -380,8 +420,9 @@ def pick_best_move(board, piece):
 
 
 
-
-
+'''
+game play function below
+'''
 
 
 
@@ -437,18 +478,17 @@ def play():
                 col = randrange(0, 7)
                 while not is_valid(board, col):
                     col = randrange(0, 7)
-                if is_valid(board, col):
-                    row = get_next_open_row(board, col)
-                    drop_piece(board, row, col, AI_PIECE)
-                    if game_turns > 3 and check_win(board, AI_PIECE):
-                        label = my_font.render("Random AI wins!", 1, YELLOW)
-                        screen.blit(label, (40,10))
-                        game_over = True
-                    game_turns += 1
-                    turn += 1
-                    turn = turn % 2
-                    print_board(board)
-                    draw_board(board)
+                row = get_next_open_row(board, col)
+                drop_piece(board, row, col, AI_PIECE)
+                if game_turns > 3 and check_win(board, AI_PIECE):
+                    label = my_font.render("Random AI wins!", 1, YELLOW)
+                    screen.blit(label, (40,10))
+                    game_over = True
+                game_turns += 1
+                turn += 1
+                turn = turn % 2
+                print_board(board)
+                draw_board(board)
             elif ai_type == BLOCKING_AI:
                 blockCol = checkThreeInARow(board, PLAYER_PIECE)
                 print("Return from checkThreeInARow")
@@ -484,25 +524,39 @@ def play():
                 game_over = True
                 print_board(board)
                 draw_board(board)
-            elif ai_type == STATE_SPACE_SEARCH:
-                #col = random.randint(0, COLUMN_COUNT-1)
-		        #col = pick_best_move(board, AI_PIECE)
+            elif ai_type == ALPHA_BETA:
                 col, minimax_score = minimax(board, 5, -math.inf, math.inf, True)
                 if is_valid(board, col):
-			        #pygame.time.wait(500)
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, AI_PIECE)
                     if check_win(board, AI_PIECE):
-                        label = my_font.render("Player 2 wins!!", 1, YELLOW)
+                        label = my_font.render("Alpha-Beta Pruning AI wins!!", 1, YELLOW)
                         screen.blit(label, (40,10))
                         game_over = True
                         
                     print_board(board)
                     draw_board(board)
-                    
+                    game_turns += 1
                     turn += 1
                     turn = turn % 2
-
+                    print_board(board)
+                    draw_board(board)
+            elif ai_type == STATE_SPACE_SEARCH:
+                col, score = state_search(board, 3, 0, True)
+                if is_valid(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, AI_PIECE)
+                    if check_win(board, AI_PIECE):
+                        label = my_font.render("State Search AI wins!!", 1, YELLOW)
+                        screen.blit(label, (40,10))
+                        game_over = True
+                    game_turns += 1
+                    turn += 1
+                    turn = turn % 2
+                    print_board(board)
+                    draw_board(board)
+                    print_board(board)
+                    draw_board(board)
         if game_over:
             pygame.time.wait(5000)
 
@@ -513,7 +567,7 @@ mainmenu.add.button('Play', start_game)
 mainmenu.add.button('AI Settings', ai_player_type_menu)
 
 ai = pygame_menu.Menu('Select a style of AI player', HEIGHT, WIDTH, theme=themes.THEME_DARK)
-ai.add.selector('Styles: ', [('Random', 1), ('Blocking', 2), ('State Space Search', 3)], default=1, onchange=set_ai)
+ai.add.selector('Styles: ', [('Random', 1), ('Blocking', 2), ('Alpha Beta Pruning', 3), ('State Space Search', 4)], default=1, onchange=set_ai)
 
 loading = pygame_menu.Menu('Loading...', HEIGHT, WIDTH, theme=themes.THEME_SOLARIZED)
 loading.add.progress_bar('Progress', progressbar_id='1', default=0, width=100)
