@@ -1,4 +1,5 @@
 # Group Name
+# ArtificialMasters
 # Member 1
 # Taylor Nastally
 # Member 2
@@ -24,7 +25,7 @@ from copy import copy, deepcopy
 
 # 1 is player (red), 2 is ai (yellow)
 
-#definitions
+# definitions
 HEIGHT = 700
 WIDTH = 700
 BLUE = (0, 0, 255)
@@ -44,7 +45,7 @@ ALPHA_BETA = 3
 STATE_SPACE_SEARCH = 4
 WINDOW_LENGTH = 4
 
-#game functions and ai control
+# game functions and ai control
 def create_board():
     board = np.zeros((ROW_COUNT, COLUMN_COUNT))
     return board
@@ -61,6 +62,7 @@ def get_next_open_row(board, col):
             return r
     return None
 
+# debug to console
 def print_board(board):
     print(np.flip(board, 0))
 
