@@ -409,24 +409,21 @@ def state_search(board, depth, score, maximizingPlayer):
 		return column, value
 
 
-
-
-
-
-
-
-
-
-
-
-
 '''
 game play function below
 '''
-
-
-
-
+'''
+game play function below
+'''
+'''
+game play function below
+'''
+'''
+game play function below
+'''
+'''
+game play function below
+'''
 
 
 def play():
