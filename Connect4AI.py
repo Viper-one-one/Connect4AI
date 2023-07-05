@@ -5,6 +5,7 @@
 # Member 2
 # Manpreet Dhindsa
 # Member 3
+# Jake Anderson
 # Member 4
 
 
@@ -236,12 +237,14 @@ def checkThreeInARow(board, piece):
 
 
 
-def evaluate_window(window, piece):
+def window_eval(window, piece):
 	score = 0
-	opp_piece = PLAYER_PIECE
+	opponent_piece = PLAYER_PIECE
+   
 	if piece == PLAYER_PIECE:
-		opp_piece = AI_PIECE
+		opponent_piece = AI_PIECE
 
+    # Window evaluation 
 	if window.count(piece) == 4:
 		score += 100
 	elif window.count(piece) == 3 and window.count(EMPTY) == 1:
@@ -249,70 +252,69 @@ def evaluate_window(window, piece):
 	elif window.count(piece) == 2 and window.count(EMPTY) == 2:
 		score += 2
 
-	if window.count(opp_piece) == 3 and window.count(EMPTY) == 1:
+	if window.count(opponent_piece) == 3 and window.count(EMPTY) == 1:
 		score -= 4
 
 	return score
 
-
 def score_position(board, piece):
 	score = 0
 
-	## Score center column
+	# Score center
 	center_array = [int(i) for i in list(board[:, COLUMN_COUNT//2])]
 	center_count = center_array.count(piece)
 	score += center_count * 3
 
-	## Score Horizontal
+	# Score horizontal
 	for r in range(ROW_COUNT):
 		row_array = [int(i) for i in list(board[r,:])]
 		for c in range(COLUMN_COUNT-3):
 			window = row_array[c:c+WINDOW_LENGTH]
-			score += evaluate_window(window, piece)
+			score += window_eval(window, piece)
 
-	## Score Vertical
+	# Score vertical
 	for c in range(COLUMN_COUNT):
 		col_array = [int(i) for i in list(board[:,c])]
 		for r in range(ROW_COUNT-3):
 			window = col_array[r:r+WINDOW_LENGTH]
-			score += evaluate_window(window, piece)
+			score += window_eval(window, piece)
 
-	## Score posiive sloped diagonal
+	# Score diagonal
 	for r in range(ROW_COUNT-3):
 		for c in range(COLUMN_COUNT-3):
 			window = [board[r+i][c+i] for i in range(WINDOW_LENGTH)]
-			score += evaluate_window(window, piece)
+			score += window_eval(window, piece)
 
+    # Score diagonal
 	for r in range(ROW_COUNT-3):
 		for c in range(COLUMN_COUNT-3):
 			window = [board[r+3-i][c+i] for i in range(WINDOW_LENGTH)]
-			score += evaluate_window(window, piece)
+			score += window_eval(window, piece)
 
 	return score
 
-
-def get_valid_locations(board):
+def get_valid(board):
 	valid_locations = []
 	for col in range(COLUMN_COUNT):
 		if is_valid(board, col):
 			valid_locations.append(col)
 	return valid_locations
 
-def is_terminal_node(board):
-	return check_win(board, PLAYER_PIECE) or check_win(board, AI_PIECE) or len(get_valid_locations(board)) == 0
+def terminal_node(board):
+	return check_win(board, PLAYER_PIECE) or check_win(board, AI_PIECE) or len(get_valid(board)) == 0
 
-def minimax(board, depth, alpha, beta, maximizingPlayer):
-	valid_locations = get_valid_locations(board)
-	is_terminal = is_terminal_node(board)
-	if depth == 0 or is_terminal:
-		if is_terminal:
+def minimax_algo(board, depth, alpha, beta, maximizingPlayer):
+	valid_locations = get_valid(board)
+	terminal = terminal_node(board)
+	if depth == 0 or terminal:
+		if terminal:
 			if check_win(board, AI_PIECE):
 				return (None, 100000000000000)
 			elif check_win(board, PLAYER_PIECE):
 				return (None, -10000000000000)
-			else: # Game is over, no more valid moves
+			else: 
 				return (None, 0)
-		else: # Depth is zero
+		else: 
 			return (None, score_position(board, AI_PIECE))
 	if maximizingPlayer:
 		value = -math.inf
@@ -321,7 +323,7 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
 			row = get_next_open_row(board, col)
 			b_copy = board.copy()
 			drop_piece(b_copy, row, col, AI_PIECE)
-			new_score = minimax(b_copy, depth-1, alpha, beta, False)[1]
+			new_score = minimax_algo(b_copy, depth-1, alpha, beta, False)[1]
 			if new_score > value:
 				value = new_score
 				column = col
@@ -329,15 +331,14 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
 			if alpha >= beta:
 				break
 		return column, value
-
-	else: # Minimizing player
+	else:
 		value = math.inf
 		column = random.choice(valid_locations)
 		for col in valid_locations:
 			row = get_next_open_row(board, col)
 			b_copy = board.copy()
 			drop_piece(b_copy, row, col, PLAYER_PIECE)
-			new_score = minimax(b_copy, depth-1, alpha, beta, True)[1]
+			new_score = minimax_algo(b_copy, depth-1, alpha, beta, True)[1]
 			if new_score < value:
 				value = new_score
 				column = col
@@ -347,8 +348,7 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
 		return column, value
 
 def pick_best_move(board, piece):
-
-	valid_locations = get_valid_locations(board)
+	valid_locations = get_valid(board)
 	best_score = -10000
 	best_col = random.choice(valid_locations)
 	for col in valid_locations:
@@ -359,12 +359,11 @@ def pick_best_move(board, piece):
 		if score > best_score:
 			best_score = score
 			best_col = col
-
 	return best_col
 
 def state_search(board, depth, score, maximizingPlayer):
-	valid_locations = get_valid_locations(board)
-	is_terminal = is_terminal_node(board)
+	valid_locations = get_valid(board)
+	is_terminal = terminal_node(board)
 	if depth == 0 or is_terminal:
 		if is_terminal:
 			if check_win(board, AI_PIECE):
@@ -514,12 +513,12 @@ def play():
                 print_board(board)
                 draw_board(board)
             elif ai_type == ALPHA_BETA:
-                col, minimax_score = minimax(board, 5, -math.inf, math.inf, True)
+                col, minimax_score = minimax_algo(board, 5, -math.inf, math.inf, True)
                 if is_valid(board, col):
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, AI_PIECE)
                     if check_win(board, AI_PIECE):
-                        label = my_font.render("Alpha-Beta Pruning AI wins!!", 1, YELLOW)
+                        label = my_font.render("Alpha-Beta wins!", 1, YELLOW)
                         screen.blit(label, (40,10))
                         game_over = True
                         
