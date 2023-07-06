@@ -366,7 +366,7 @@ def pick_best_move(board, piece):
 			best_col = col
 	return best_col
 
-def state_search(board, depth, score, maximizingPlayer):
+def mini_max_search(board, depth, score, maximizingPlayer):
 	valid_locations = get_valid(board)
 	is_terminal = end_state(board)
 	if depth == 0 or is_terminal:
@@ -386,7 +386,7 @@ def state_search(board, depth, score, maximizingPlayer):
 			row = get_next_open_row(board, col)
 			b_copy = board.copy()
 			drop_piece(b_copy, row, col, AI_PIECE)
-			new_score = state_search(b_copy, depth-1, score, False)[1]
+			new_score = mini_max_search(b_copy, depth-1, score, False)[1]
 			if new_score > value:
 				value = new_score
 				column = col
@@ -398,7 +398,7 @@ def state_search(board, depth, score, maximizingPlayer):
 			row = get_next_open_row(board, col)
 			b_copy = board.copy()
 			drop_piece(b_copy, row, col, PLAYER_PIECE)
-			new_score = state_search(b_copy, depth-1, score, True)[1]
+			new_score = mini_max_search(b_copy, depth-1, score, True)[1]
 			if new_score < value:
 				value = new_score
 				column = col
@@ -535,7 +535,7 @@ def play():
                     print_board(board)
                     draw_board(board)
             elif ai_type == STATE_SPACE_SEARCH:
-                col, score = state_search(board, 3, 0, True)
+                col, score = mini_max_search(board, 3, 0, True)
                 if is_valid(board, col):
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, AI_PIECE)
