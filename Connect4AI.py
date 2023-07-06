@@ -7,6 +7,11 @@
 # Member 3
 # Member 4
 
+'''
+game code derived from here: https://github.com/KeithGalli/Connect4-Python/blob/master/connect4.py
+menu code derived from here: https://coderslegacy.com/python/create-menu-screens-in-pygame-tutorial/
+'''
+
 
 from ast import Global
 from faulthandler import is_enabled
@@ -236,26 +241,26 @@ def checkThreeInARow(board, piece):
 
 
 
-def evaluate_window(window, piece):
+def score_section(section, piece):
 	score = 0
-	opp_piece = PLAYER_PIECE
+	enemy_piece = PLAYER_PIECE
 	if piece == PLAYER_PIECE:
-		opp_piece = AI_PIECE
+		enemy_piece = AI_PIECE
 
-	if window.count(piece) == 4:
+	if section.count(piece) == 4:
 		score += 100
-	elif window.count(piece) == 3 and window.count(EMPTY) == 1:
+	elif section.count(piece) == 3 and section.count(EMPTY) == 1:
 		score += 5
-	elif window.count(piece) == 2 and window.count(EMPTY) == 2:
+	elif section.count(piece) == 2 and section.count(EMPTY) == 2:
 		score += 2
 
-	if window.count(opp_piece) == 3 and window.count(EMPTY) == 1:
+	if section.count(enemy_piece) == 3 and section.count(EMPTY) == 1:
 		score -= 4
 
 	return score
 
 
-def score_position(board, piece):
+def score_state(board, piece):
 	score = 0
 
 	## Score center column
@@ -267,26 +272,26 @@ def score_position(board, piece):
 	for r in range(ROW_COUNT):
 		row_array = [int(i) for i in list(board[r,:])]
 		for c in range(COLUMN_COUNT-3):
-			window = row_array[c:c+WINDOW_LENGTH]
-			score += evaluate_window(window, piece)
+			section = row_array[c:c+WINDOW_LENGTH]
+			score += score_section(section, piece)
 
 	## Score Vertical
 	for c in range(COLUMN_COUNT):
 		col_array = [int(i) for i in list(board[:,c])]
 		for r in range(ROW_COUNT-3):
-			window = col_array[r:r+WINDOW_LENGTH]
-			score += evaluate_window(window, piece)
+			section = col_array[r:r+WINDOW_LENGTH]
+			score += score_section(section, piece)
 
 	## Score posiive sloped diagonal
 	for r in range(ROW_COUNT-3):
 		for c in range(COLUMN_COUNT-3):
-			window = [board[r+i][c+i] for i in range(WINDOW_LENGTH)]
-			score += evaluate_window(window, piece)
+			section = [board[r+i][c+i] for i in range(WINDOW_LENGTH)]
+			score += score_section(section, piece)
 
 	for r in range(ROW_COUNT-3):
 		for c in range(COLUMN_COUNT-3):
-			window = [board[r+3-i][c+i] for i in range(WINDOW_LENGTH)]
-			score += evaluate_window(window, piece)
+			section = [board[r+3-i][c+i] for i in range(WINDOW_LENGTH)]
+			score += score_section(section, piece)
 
 	return score
 
@@ -298,22 +303,22 @@ def get_valid_locations(board):
 			valid_locations.append(col)
 	return valid_locations
 
-def is_terminal_node(board):
+def end_state(board):
 	return check_win(board, PLAYER_PIECE) or check_win(board, AI_PIECE) or len(get_valid_locations(board)) == 0
 
-def minimax(board, depth, alpha, beta, maximizingPlayer):
+def alpha_beta_prune(board, depth, alpha, beta, maximizingPlayer):
 	valid_locations = get_valid_locations(board)
-	is_terminal = is_terminal_node(board)
+	is_terminal = end_state(board)
 	if depth == 0 or is_terminal:
 		if is_terminal:
 			if check_win(board, AI_PIECE):
 				return (None, 100000000000000)
 			elif check_win(board, PLAYER_PIECE):
 				return (None, -10000000000000)
-			else: # Game is over, no more valid moves
+			else:
 				return (None, 0)
-		else: # Depth is zero
-			return (None, score_position(board, AI_PIECE))
+		else:
+			return (None, score_state(board, AI_PIECE))
 	if maximizingPlayer:
 		value = -math.inf
 		column = random.choice(valid_locations)
@@ -321,7 +326,7 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
 			row = get_next_open_row(board, col)
 			b_copy = board.copy()
 			drop_piece(b_copy, row, col, AI_PIECE)
-			new_score = minimax(b_copy, depth-1, alpha, beta, False)[1]
+			new_score = alpha_beta_prune(b_copy, depth-1, alpha, beta, False)[1]
 			if new_score > value:
 				value = new_score
 				column = col
@@ -330,14 +335,14 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
 				break
 		return column, value
 
-	else: # Minimizing player
+	else:
 		value = math.inf
 		column = random.choice(valid_locations)
 		for col in valid_locations:
 			row = get_next_open_row(board, col)
 			b_copy = board.copy()
 			drop_piece(b_copy, row, col, PLAYER_PIECE)
-			new_score = minimax(b_copy, depth-1, alpha, beta, True)[1]
+			new_score = alpha_beta_prune(b_copy, depth-1, alpha, beta, True)[1]
 			if new_score < value:
 				value = new_score
 				column = col
@@ -355,7 +360,7 @@ def pick_best_move(board, piece):
 		row = get_next_open_row(board, col)
 		temp_board = board.copy()
 		drop_piece(temp_board, row, col, piece)
-		score = score_position(temp_board, piece)
+		score = score_state(temp_board, piece)
 		if score > best_score:
 			best_score = score
 			best_col = col
@@ -364,7 +369,7 @@ def pick_best_move(board, piece):
 
 def state_search(board, depth, score, maximizingPlayer):
 	valid_locations = get_valid_locations(board)
-	is_terminal = is_terminal_node(board)
+	is_terminal = end_state(board)
 	if depth == 0 or is_terminal:
 		if is_terminal:
 			if check_win(board, AI_PIECE):
@@ -374,7 +379,7 @@ def state_search(board, depth, score, maximizingPlayer):
 			else:
 				return (None, 0)
 		else:
-			return (None, score_position(board, AI_PIECE))
+			return (None, score_state(board, AI_PIECE))
 	if maximizingPlayer:
 		value = -math.inf
 		column = random.choice(valid_locations)
@@ -514,7 +519,7 @@ def play():
                 print_board(board)
                 draw_board(board)
             elif ai_type == ALPHA_BETA:
-                col, minimax_score = minimax(board, 5, -math.inf, math.inf, True)
+                col, minimax_score = alpha_beta_prune(board, 5, -math.inf, math.inf, True)
                 if is_valid(board, col):
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, AI_PIECE)
@@ -558,25 +563,14 @@ mainmenu.add.button('AI Settings', ai_player_type_menu)
 ai = pygame_menu.Menu('Select a style of AI player', HEIGHT, WIDTH, theme=themes.THEME_DARK)
 ai.add.selector('Styles: ', [('Random', 1), ('Blocking', 2), ('Alpha Beta Pruning', 3), ('State Space Search', 4)], default=1, onchange=set_ai)
 
-loading = pygame_menu.Menu('Loading...', HEIGHT, WIDTH, theme=themes.THEME_SOLARIZED)
-loading.add.progress_bar('Progress', progressbar_id='1', default=0, width=100)
 
 arrow = pygame_menu.widgets.LeftArrowSelection(arrow_size=(10,15))
-
-update_loading = pygame.USEREVENT+0
 
 print(random.choice(range(0,ROW_COUNT)))
 
 while True:
     events = pygame.event.get()
     for event in events:
-        if event.type == update_loading:
-            progress = loading.get_widget('1')
-            if progress.get_value() >= 100:
-                progress.reset_value()
-            progress.set_value(progress.get_value() + 1)
-            if progress.get_value() == 100:
-                pygame.time.set_timer(update_loading,0)
         if event.type == pygame.QUIT:
             exit()
     if mainmenu.is_enabled():
