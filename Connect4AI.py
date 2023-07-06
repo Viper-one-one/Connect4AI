@@ -5,6 +5,7 @@
 # Member 2
 # Manpreet Dhindsa
 # Member 3
+# Jake Anderson
 # Member 4
 
 '''
@@ -263,31 +264,32 @@ def score_section(section, piece):
 def score_state(board, piece):
 	score = 0
 
-	## Score center column
+	# Score center
 	center_array = [int(i) for i in list(board[:, COLUMN_COUNT//2])]
 	center_count = center_array.count(piece)
 	score += center_count * 3
 
-	## Score Horizontal
+	# Score horizontal
 	for r in range(ROW_COUNT):
 		row_array = [int(i) for i in list(board[r,:])]
 		for c in range(COLUMN_COUNT-3):
 			section = row_array[c:c+WINDOW_LENGTH]
 			score += score_section(section, piece)
 
-	## Score Vertical
+	# Score vertical
 	for c in range(COLUMN_COUNT):
 		col_array = [int(i) for i in list(board[:,c])]
 		for r in range(ROW_COUNT-3):
 			section = col_array[r:r+WINDOW_LENGTH]
 			score += score_section(section, piece)
 
-	## Score posiive sloped diagonal
+	# Score diagonal
 	for r in range(ROW_COUNT-3):
 		for c in range(COLUMN_COUNT-3):
 			section = [board[r+i][c+i] for i in range(WINDOW_LENGTH)]
 			score += score_section(section, piece)
 
+    # Score diagonal
 	for r in range(ROW_COUNT-3):
 		for c in range(COLUMN_COUNT-3):
 			section = [board[r+3-i][c+i] for i in range(WINDOW_LENGTH)]
@@ -295,8 +297,7 @@ def score_state(board, piece):
 
 	return score
 
-
-def get_valid_locations(board):
+def get_valid(board):
 	valid_locations = []
 	for col in range(COLUMN_COUNT):
 		if is_valid(board, col):
@@ -304,10 +305,10 @@ def get_valid_locations(board):
 	return valid_locations
 
 def end_state(board):
-	return check_win(board, PLAYER_PIECE) or check_win(board, AI_PIECE) or len(get_valid_locations(board)) == 0
+	return check_win(board, PLAYER_PIECE) or check_win(board, AI_PIECE) or len(get_valid(board)) == 0
 
 def alpha_beta_prune(board, depth, alpha, beta, maximizingPlayer):
-	valid_locations = get_valid_locations(board)
+	valid_locations = get_valid(board)
 	is_terminal = end_state(board)
 	if depth == 0 or is_terminal:
 		if is_terminal:
@@ -352,8 +353,7 @@ def alpha_beta_prune(board, depth, alpha, beta, maximizingPlayer):
 		return column, value
 
 def pick_best_move(board, piece):
-
-	valid_locations = get_valid_locations(board)
+	valid_locations = get_valid(board)
 	best_score = -10000
 	best_col = random.choice(valid_locations)
 	for col in valid_locations:
@@ -364,11 +364,10 @@ def pick_best_move(board, piece):
 		if score > best_score:
 			best_score = score
 			best_col = col
-
 	return best_col
 
 def state_search(board, depth, score, maximizingPlayer):
-	valid_locations = get_valid_locations(board)
+	valid_locations = get_valid(board)
 	is_terminal = end_state(board)
 	if depth == 0 or is_terminal:
 		if is_terminal:
@@ -524,7 +523,7 @@ def play():
                     row = get_next_open_row(board, col)
                     drop_piece(board, row, col, AI_PIECE)
                     if check_win(board, AI_PIECE):
-                        label = my_font.render("Alpha-Beta Pruning AI wins!!", 1, YELLOW)
+                        label = my_font.render("Alpha-Beta wins!", 1, YELLOW)
                         screen.blit(label, (40,10))
                         game_over = True
                         
