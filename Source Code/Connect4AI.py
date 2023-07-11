@@ -11,7 +11,8 @@
 '''
 game code derived from here: https://github.com/KeithGalli/Connect4-Python/blob/master/connect4.py
 from here I (Taylor) got the basic code for arrays, constant definitions, basic funcitons like create_board(), drop_piece(), is_valid(), get_next_open_row()
-print_board(), check_win(), draw_board(), and the general layout of the while loop in play()
+print_board(), check_win(), draw_board(), and the general layout of the while loop in play(). Special thanks to Dhindsa for refactoring the code to be sleeker
+and for implementing blocking AI so quickly. The original code was modified to make the game faster or fit better with our ai implementations.
 menu code derived from here: https://coderslegacy.com/python/create-menu-screens-in-pygame-tutorial/
 from here I (Taylor) got everything under #Welcome Screen and Menu and adapted it to function with the code from the above GitHub
 '''
